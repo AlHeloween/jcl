@@ -621,10 +621,14 @@ end;
 
 procedure TInstallFrame.IDEEditionRadioGroupClick(Sender: TObject);
 begin
-  OutputDebugString(PChar(Format('AdidDebug: RadioClick, handler=%s',
+  OutputDebugString(PChar(Format('Adid: RadioClick fired, OnIDEEditionChanged=%s',
     [BoolToStr(Assigned(FOnIDEEditionChanged), True)])));
+  if Assigned(FIDEEditionRadioGroup) then
+    OutputDebugString(PChar(Format('Adid: ItemIndex=%d', [FIDEEditionRadioGroup.ItemIndex])));
   if Assigned(FOnIDEEditionChanged) then
-    FOnIDEEditionChanged(Self);
+    FOnIDEEditionChanged(Self)
+  else
+    OutputDebugString('Adid: WARNING OnIDEEditionChanged=nil');
 end;
 
 function TInstallFrame.GetDirectoryCount: Integer;
