@@ -72,6 +72,8 @@ type
     FOnSetIcon: TSetIconEvent;
     FFormCompile: TFormCompile;
     FInstallGUI: IJediInstallGUI;
+    FOnIDEEditionChanged: TNotifyEvent;
+    procedure IDEEditionRadioGroupClick(Sender: TObject);
     function GetFormCompile: TFormCompile;
     function GetNodeChecked(Node: TTreeNode): Boolean;
     function IsAutoChecked(Node: TTreeNode): Boolean;
@@ -120,6 +122,7 @@ type
     procedure CompilationProgress(const FileName: string; LineNumber: Integer);
     procedure SetIcon(const FileName: string);
     property OnSetIcon: TSetIconEvent read FOnSetIcon write FOnSetIcon;
+    property OnIDEEditionChanged: TNotifyEvent read FOnIDEEditionChanged write FOnIDEEditionChanged;
   end;
 
 implementation
@@ -548,6 +551,7 @@ begin
     FIDEEditionRadioGroup.SetBounds(8, 34, 397, 40);
     FIDEEditionRadioGroup.Anchors := [akLeft, akTop, akRight];
     FIDEEditionRadioGroup.Columns := 2;
+    FIDEEditionRadioGroup.OnClick := IDEEditionRadioGroupClick;
 
     { Shift existing components down to make room for IDE edition group box }
     LabelSelectComponents.Top := 88;
@@ -613,6 +617,12 @@ begin
     Result := FIDEEditionRadioGroup.ItemIndex  { 0=32-bit, 1=64-bit }
   else
     Result := 0; { default: 32-bit IDE }
+end;
+
+procedure TInstallFrame.IDEEditionRadioGroupClick(Sender: TObject);
+begin
+  if Assigned(FOnIDEEditionChanged) then
+    FOnIDEEditionChanged(Self);
 end;
 
 function TInstallFrame.GetDirectoryCount: Integer;

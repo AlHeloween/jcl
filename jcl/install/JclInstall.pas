@@ -208,6 +208,7 @@ type
     procedure MarkOptionBegin(Option: TInstallerOption); overload;
     procedure MarkOptionEnd(Id: Integer; Success: Boolean); overload;
     procedure MarkOptionEnd(Option: TInstallerOption; Success: Boolean); overload;
+    procedure IDEEditionChangedHandler(Sender: TObject);
   public
     destructor Destroy; override;
     procedure Close;
@@ -381,7 +382,8 @@ uses
   JclPreProcessorParser,
   JclDevToolsResources,
   JediInstallResources,
-  JclInstallResources;
+  JclInstallResources,
+  JediGUIInstall;
 
 type
   TOptionRec = record
@@ -1333,6 +1335,10 @@ begin
     else
       FGUIHPPPathIndex := -1;
   end;
+
+  { Wire IDE edition radio group click → recompute paths }
+  if (GUIPage is TInstallFrame) and (Target is TJclBDSInstallation) then
+    (GUIPage as TInstallFrame).OnIDEEditionChanged := IDEEditionChangedHandler;
 
   LoadValues;
 end;
@@ -2670,6 +2676,33 @@ begin
   end
   else
     Result := Target.VclIncludeDir[TargetPlatform];
+end;
+
+procedure TJclInstallation.IDEEditionChangedHandler(Sender: TObject);
+var
+  Edition: Integer;
+begin
+  if not Assigned(GUIPage) then Exit;
+  Edition := GUIPage.GetIDEEdition;
+  case Edition of
+    0: FTargetIDEEdition := ie32;
+    1: FTargetIDEEdition := ie64;
+    2: FTargetIDEEdition := ieBoth;
+  else
+    FTargetIDEEdition := ie32;
+  end;
+
+  { Update target's IDE edition to invalidate env var cache and recompute paths }
+  if Target is TJclBDSInstallation then
+    (Target as TJclBDSInstallation).IDEEdition := FTargetIDEEdition;
+
+  { Push recomputed paths to GUI directory fields }
+  if (FGUIBPLPathIndex >= 0) and (FGUIBPLPathIndex < GUIPage.DirectoryCount) then
+    GUIPage.Directories[FGUIBPLPathIndex] := Target.BPLOutputPath[FTargetPlatform];
+  if (FGUIDCPPathIndex >= 0) and (FGUIDCPPathIndex < GUIPage.DirectoryCount) then
+    GUIPage.Directories[FGUIDCPPathIndex] := FJclDcpPath;
+  if (FGUIHPPPathIndex >= 0) and (FGUIHPPPathIndex < GUIPage.DirectoryCount) then
+    GUIPage.Directories[FGUIHPPPathIndex] := Target.VclIncludeDir[FTargetPlatform];
 end;
 
 procedure TJclInstallation.Close;
