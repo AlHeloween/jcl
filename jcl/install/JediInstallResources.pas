@@ -78,6 +78,12 @@ resourcestring
                   'If a profile has not IDE settings, the JCL won''t be installed on it.';
   RsGUIInstallSelectedOnly = 'Install &selected only';
 
+  RsGUITargetIDEEdition = 'IDE Edition';
+  RsGUITargetIDEEditionHint = 'Select which IDE edition to build for. 32-bit IDE uses bin\dcc64.exe (cross-compiler). 64-bit IDE uses bin64\dcc64.exe (native). Design-time BPLs must match the IDE edition that loads them.';
+  RsGUIIDEEdition32 = '32-bit IDE';
+  RsGUIIDEEdition64 = '64-bit IDE';
+  RsGUIIDEEditionBoth = 'Both editions';
+
 
 implementation
 

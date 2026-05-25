@@ -349,7 +349,7 @@ type
     property Pages: TStrings read GetPages;
   end;
 
-  TCommandLineTool = (clAsm, clBcc32, clBcc32c, clBcc64, clBcc64x, clDcc32, clDcc64, clDccOSX32, clDccOSX64, clDcciOSSimulator,
+  TCommandLineTool = (clAsm, clBcc32, clBcc32c, clBcc64, clBcc64x, clDcc32, clDcc64, clDcc64x, clDccOSX32, clDccOSX64, clDcciOSSimulator,
     clDcciOS32, clDcciOS64, clDccArm32, clDccArm64, clDccLinux64, clDccIL, clMake, clProj2Mak);
   TCommandLineTools = set of TCommandLineTool;
 
@@ -645,6 +645,7 @@ type
     FHelp2Manager: TJclHelp2Manager;
     FDCCIL: TJclDCCIL;
     FDCC64: TJclDCC64;
+    FDCC64Native: TJclDCC64;
     FDCCOSX32: TJclDCCOSX32;
     FDCCOSX64: TJclDCCOSX64;
     FDCCiOSSimulator: TJclDCCiOSSimulator;
@@ -673,6 +674,7 @@ type
     procedure SetRawCppIncludePath(APlatform: TJclBDSPlatform; const Value: TJclBorRADToolPath);
     function GetMaxDelphiCLRVersion: string;
     function GetDCC64: TJclDCC64;
+    function GetDCC64Native: TJclDCC64;
     function GetDCCOSX32: TJclDCCOSX32;
     function GetDCCOSX64: TJclDCCOSX64;
     function GetDCCiOSSimulator: TJclDCCiOSSimulator;
@@ -763,6 +765,7 @@ type
     property DualPackageInstallation: Boolean read FDualPackageInstallation write SetDualPackageInstallation;
     property Help2Manager: TJclHelp2Manager read FHelp2Manager;
     property DCC64: TJclDCC64 read GetDCC64;
+    property DCC64Native: TJclDCC64 read GetDCC64Native;
     property DCCOSX32: TJclDCCOSX32 read GetDCCOSX32;
     property DCCOSX64: TJclDCCOSX64 read GetDCCOSX64;
     property DCCiOSSimulator: TJclDCCiOSSimulator read GetDCCiOSSimulator;
@@ -2021,6 +2024,8 @@ begin
     Include(FCommandLineTools, clDcc32);
   if FileExists(BinFolderName + DCC64ExeName) then
     Include(FCommandLineTools, clDcc64);
+  if FileExists(PathAddSeparator(PathRemoveSeparator(BinFolderName) + '64') + DCC64ExeName) then
+    Include(FCommandLineTools, clDcc64x);
   if FileExists(BinFolderName + DCCOSX32ExeName) then
     Include(FCommandLineTools, clDccOSX32);
   if FileExists(BinFolderName + DCCOSX64ExeName) then
@@ -3749,6 +3754,7 @@ destructor TJclBDSInstallation.Destroy;
 begin
   FreeAndNil(FDCCIL);
   FreeAndNil(FDCC64);
+  FreeAndNil(FDCC64Native);
   FreeAndNil(FBCC64);
   FreeAndNil(FBCC64X);
   FreeAndNil(FDCCOSX32);
@@ -4161,6 +4167,22 @@ begin
   Result := FDCC64;
 end;
 
+function TJclBDSInstallation.GetDCC64Native: TJclDCC64;
+var
+  Bin64Folder: string;
+begin
+  if not Assigned(FDCC64Native) then
+  begin
+    if not (clDcc64x in CommandLineTools) then
+      raise EJclBorRadException.CreateResFmt(@RsENotFound, [Dcc64ExeName]);
+    Bin64Folder := PathAddSeparator(PathRemoveSeparator(BinFolderName) + '64');
+    FDCC64Native := TJclDCC64.Create(Bin64Folder, LongPathBug, DCCVersion, CompilerSettingsFormat,
+                                     SupportsNoConfig, SupportsPlatform, DCPOutputPath[bpWin64], LibFolderName[bpWin64],
+                                     LibDebugFolderName[bpWin64], ObjFolderName[bpWin64]);
+  end;
+  Result := FDCC64Native;
+end;
+
 function TJclBDSInstallation.GetDCCOSX32: TJclDCCOSX32;
 begin
   if not Assigned(FDCCOSX32) then
@@ -4427,7 +4449,7 @@ end;
 
 function TJclBDSInstallation.GetIsDcc64: Boolean;
 begin
-  Result := FDCC = FDCC64;
+  Result := (FDCC = FDCC64) or (FDCC = FDCC64Native);
 end;
 
 class function TJclBDSInstallation.GetLatestUpdatePackForVersion(Version: Integer): Integer;

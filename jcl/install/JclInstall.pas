@@ -146,6 +146,8 @@ const
       '7ZIP_LINKDLL', '7ZIP_LINKONREQUEST' );
 
 type
+  TIDEEdition = (ieDefault, ie32, ie64, ieBoth);
+
   TJclDistribution = class;
 
   TJclInstallation = class
@@ -155,6 +157,7 @@ type
     FTarget: TJclBorRADToolInstallation;
     FTargetName: string;
     FTargetPlatform: TJclBDSPlatform;
+    FTargetIDEEdition: TIDEEdition;
     FIncludeFileName: string;
     FGUIPage: IJediInstallPage;
     FGUI: IJediInstallGUI;
@@ -224,6 +227,7 @@ type
     property GUIPage: IJediInstallPage read FGUIPage;
     property GUI: IJediInstallGUI read FGUI;
     property TargetPlatform: TJclBDSPlatform read FTargetPlatform;
+    property TargetIDEEdition: TIDEEdition read FTargetIDEEdition write FTargetIDEEdition;
     property Enabled: Boolean read GetEnabled;
     property OptionCheckedById[Id: Integer]: Boolean read GetOptionCheckedById;
     property OptionChecked[Option: TInstallerOption]: Boolean read GetOptionChecked;
@@ -370,6 +374,7 @@ uses
   JclSecurity,
   JediRegInfo,
   JclShell,
+  System.Win.Registry,
   {$ENDIF MSWINDOWS}
   JclFileUtils, JclStrings,
   JclSimpleXML, JclStreams,
@@ -665,6 +670,7 @@ begin
 
   FDistribution := JclDistribution;
   FTargetPlatform := ATargetPlatform;
+  FTargetIDEEdition := ieDefault;
   FTargetName := Target.Name;
 
   if (Target.RadToolKind = brBorlandDevStudio) and (Target.IDEVersionNumber >= 9) then
@@ -1808,7 +1814,10 @@ var
       MarkOptionBegin(joJCLPackages);
 
       if (Target is TJclBDSInstallation) and (Target.IDEVersionNumber >= 9) and (FTargetPlatform = bpWin64) then
-        Target.DCC := (Target as TJclBDSInstallation).DCC64
+        if (FTargetIDEEdition <> ie32) and (clDcc64x in Target.CommandLineTools) then
+          Target.DCC := (Target as TJclBDSInstallation).DCC64Native
+        else
+          Target.DCC := (Target as TJclBDSInstallation).DCC64
       else
         Target.DCC := Target.DCC32;
 
@@ -2152,6 +2161,14 @@ begin
     begin
       GUIPage.Show;
       GUIPage.BeginInstall;
+      { Read IDE edition selection from GUI: 0=32-bit IDE, 1=64-bit IDE, 2=Both }
+      case GUIPage.GetIDEEdition of
+        0: FTargetIDEEdition := ie32;   { bin\dcc64.exe cross-compiler }
+        1: FTargetIDEEdition := ie64;   { bin64\dcc64.exe native compiler }
+        2: FTargetIDEEdition := ieBoth; { compile for both editions }
+      else
+        FTargetIDEEdition := ie32;
+      end;
     end;
 
     FLogLines.ClearLog;
@@ -3616,6 +3633,114 @@ begin
   InitInstallations;
 end;
 
+{$IFDEF MSWINDOWS}
+{ CleanupStaleKnownPackages — validates registry entries in Known Packages / Known Packages x64.
+  Removes entries pointing to non-existent files or wrong-architecture BPLs.
+  Called before install and before uninstall. }
+procedure CleanupStaleKnownPackages(const ConfigDataLocation: string);
+
+  function Is64BitBPL(const FileName: string): Boolean;
+  var
+    FS: TFileStream;
+    Header: TImageDosHeader;
+    NtHeaders: TImageNtHeaders;
+  begin
+    Result := False;
+    if not FileExists(FileName) then Exit;
+    try
+      FS := TFileStream.Create(FileName, fmOpenRead or fmShareDenyNone);
+      try
+        if FS.Read(Header, SizeOf(Header)) <> SizeOf(Header) then Exit;
+        if Header.e_magic <> IMAGE_DOS_SIGNATURE then Exit;
+        FS.Position := Header._lfanew;
+        if FS.Read(NtHeaders, SizeOf(NtHeaders)) <> SizeOf(NtHeaders) then Exit;
+        if NtHeaders.Signature <> IMAGE_NT_SIGNATURE then Exit;
+        Result := NtHeaders.FileHeader.Machine = IMAGE_FILE_MACHINE_AMD64;
+      finally
+        FS.Free;
+      end;
+    except
+      Exit;
+    end;
+  end;
+
+  procedure ValidateKey(const KeyPath: string; IsX64Key: Boolean);
+  var
+    Reg: TRegistry;
+    Names: TStringList;
+    I: Integer;
+    FileName: string;
+    RealFileName: string;
+    ShouldRemove: Boolean;
+  begin
+    Reg := TRegistry.Create;
+    Names := TStringList.Create;
+    try
+      Reg.RootKey := HKEY_CURRENT_USER;
+      if not Reg.OpenKeyReadOnly(KeyPath) then Exit;
+      Reg.GetValueNames(Names);
+
+      for I := 0 to Names.Count - 1 do
+      begin
+        ShouldRemove := False;
+        FileName := Names[I];
+
+        { Expand $(BDSBIN), $(BDSCOMMONDIR) etc. }
+        SetLength(RealFileName, MAX_PATH + 1);
+        SetLength(RealFileName, ExpandEnvironmentStrings(PChar(FileName),
+          PChar(RealFileName), MAX_PATH));
+        if RealFileName = '' then
+          RealFileName := FileName;
+
+        { Check if file exists }
+        if not FileExists(RealFileName) then
+        begin
+          OutputDebugString(PChar(Format('BDE Installer: Removing stale entry: %s (file not found)', [FileName])));
+          ShouldRemove := True;
+        end
+        else
+        begin
+          { Check architecture matches the key }
+          if not Is64BitBPL(RealFileName) then
+          begin
+            if IsX64Key then
+            begin
+              OutputDebugString(PChar(Format('BDE Installer: Removing 32-bit BPL from x64 key: %s', [FileName])));
+              ShouldRemove := True;
+            end;
+          end
+          else
+          begin
+            if not IsX64Key then
+            begin
+              OutputDebugString(PChar(Format('BDE Installer: Removing 64-bit BPL from 32-bit key: %s', [FileName])));
+              ShouldRemove := True;
+            end;
+          end;
+        end;
+
+        if ShouldRemove then
+        begin
+          Reg.CloseKey;
+          if Reg.OpenKey(KeyPath, False) then
+            Reg.DeleteValue(FileName);
+          if not Reg.OpenKeyReadOnly(KeyPath) then Break;
+        end;
+      end;
+    finally
+      Reg.Free;
+      Names.Free;
+    end;
+  end;
+
+begin
+  OutputDebugString('BDE Installer: Validating Known Packages registry entries...');
+  ValidateKey(ConfigDataLocation + '\Known Packages', False);
+  ValidateKey(ConfigDataLocation + '\Known Packages x64', True);
+  OutputDebugString('BDE Installer: Known Packages validation complete.');
+end;
+{$ENDIF MSWINDOWS}
+
 function TJclDistribution.Install(InstallPage: IJediInstallPage): Boolean;
 var
   I: Integer;
@@ -3664,6 +3789,11 @@ begin
         end;
       end;
     end;
+
+    { Validate and clean stale Known Packages entries before installing }
+    if RadToolInstallations.Count > 0 then
+      CleanupStaleKnownPackages(RadToolInstallations[0].ConfigDataLocation);
+
     RegHelpClearCommands;
     {$ENDIF MSWINDOWS}
 

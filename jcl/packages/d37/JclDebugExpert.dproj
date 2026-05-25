@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{FC16FA9B-0429-42EB-9B53-30D19AAB3EE4}</ProjectGuid>
         <MainSource>JclDebugExpert.dpk</MainSource>
-        <ProjectVersion>20.3</ProjectVersion>
+        <ProjectVersion>37.0</ProjectVersion>
         <Config Condition="'$(Config)'==''">Release</Config>
         <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
         <DCC_Define>BCB;RELEASE</DCC_Define>

@@ -105,6 +105,7 @@ type
     procedure AddText(const Line: string);
     procedure CompilationProgress(const FileName: string; LineNumber: Integer);
     procedure SetIcon(const FileName: string);
+    function GetIDEEdition: Integer; { 0=32-bit IDE, 1=64-bit IDE, 2=Both }
 
     property OptionChecked[Id: Integer]: Boolean read GetOptionChecked write SetOptionChecked;
     property DirectoryCount: Integer read GetDirectoryCount;

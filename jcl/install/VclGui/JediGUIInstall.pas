@@ -61,6 +61,9 @@ type
     procedure TreeViewCustomDrawItem(Sender: TCustomTreeView; Node: TTreeNode;
       State: TCustomDrawState; var DefaultDraw: Boolean);
   private
+    FIDEEditionGroupBox: TGroupBox;
+    FIDEEditionLabel: TLabel;
+    FIDEEditionRadioGroup: TRadioGroup;
     FNodeData: TList;
     FDirectories: TList;
     FCheckedCount: Integer;
@@ -96,6 +99,7 @@ type
     procedure InitDisplay;
     function GetOptionChecked(Id: Integer): Boolean;
     procedure SetOptionChecked(Id: Integer; Value: Boolean);
+    function GetIDEEdition: Integer;
     function GetDirectoryCount: Integer;
     function GetDirectory(Index: Integer): string;
     procedure SetDirectory(Index: Integer; const Value: string);
@@ -517,9 +521,40 @@ procedure TInstallFrame.InitDisplay;
 var
   ANode: TTreeNode;
 begin
+  { Create IDE edition selection controls dynamically (safe: frame is fully parented) }
+  if not Assigned(FIDEEditionGroupBox) then
+  begin
+    FIDEEditionGroupBox := TGroupBox.Create(Self);
+    FIDEEditionGroupBox.Parent := ComponentsTreePanel;
+    FIDEEditionGroupBox.SetBounds(8, 2, 413, 80);
+    FIDEEditionGroupBox.Anchors := [akLeft, akTop, akRight];
+
+    FIDEEditionLabel := TLabel.Create(Self);
+    FIDEEditionLabel.Parent := FIDEEditionGroupBox;
+    FIDEEditionLabel.SetBounds(8, 16, 397, 13);
+    FIDEEditionLabel.AutoSize := False;
+    FIDEEditionLabel.WordWrap := True;
+
+    FIDEEditionRadioGroup := TRadioGroup.Create(Self);
+    FIDEEditionRadioGroup.Parent := FIDEEditionGroupBox;
+    FIDEEditionRadioGroup.SetBounds(8, 34, 397, 40);
+    FIDEEditionRadioGroup.Anchors := [akLeft, akTop, akRight];
+    FIDEEditionRadioGroup.Columns := 2;
+  end;
+
   LabelSelectComponents.Caption := LoadResString(@RsGUISelectComponents);
   LabelInstallationLog.Caption := LoadResString(@RsGUIInstallationLog);
   OptionsGroupBox.Caption := LoadResString(@RsGUIAdvancedOptions);
+
+  { Initialise IDE edition radio group }
+  FIDEEditionGroupBox.Caption := LoadResString(@RsGUITargetIDEEdition);
+  FIDEEditionLabel.Caption := LoadResString(@RsGUITargetIDEEditionHint);
+  FIDEEditionRadioGroup.Items.Clear;
+  FIDEEditionRadioGroup.Items.Add(LoadResString(@RsGUIIDEEdition32));
+  FIDEEditionRadioGroup.Items.Add(LoadResString(@RsGUIIDEEdition64));
+  { ieBoth radio option deferred }
+  // FIDEEditionRadioGroup.Items.Add(LoadResString(@RsGUIIDEEditionBoth));
+  FIDEEditionRadioGroup.ItemIndex := 0; { default: 32-bit IDE }
 
   ANode := TreeView.Items.GetFirstNode;
   while Assigned(ANode) do
@@ -554,6 +589,14 @@ begin
       Break;
     ANode := ANode.Parent;
   end;
+end;
+
+function TInstallFrame.GetIDEEdition: Integer;
+begin
+  if Assigned(FIDEEditionRadioGroup) and (FIDEEditionRadioGroup.ItemIndex >= 0) then
+    Result := FIDEEditionRadioGroup.ItemIndex  { 0=32-bit, 1=64-bit }
+  else
+    Result := 0; { default: 32-bit IDE }
 end;
 
 function TInstallFrame.GetDirectoryCount: Integer;

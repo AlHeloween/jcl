@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{DCDB1939-E79B-4AF6-855E-78310CAF8467}</ProjectGuid>
         <MainSource>JclFavoriteFoldersExpertDLL.dpr</MainSource>
-        <ProjectVersion>20.3</ProjectVersion>
+        <ProjectVersion>37.0</ProjectVersion>
         <Config Condition="'$(Config)'==''">Release</Config>
         <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
         <DCC_Define>BCB;RELEASE</DCC_Define>

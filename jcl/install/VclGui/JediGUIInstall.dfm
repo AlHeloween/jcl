@@ -78,16 +78,16 @@ object InstallFrame: TInstallFrame
     TabOrder = 1
     object LabelSelectComponents: TLabel
       Left = 8
-      Top = 5
+      Top = 88
       Width = 119
       Height = 13
       Caption = 'RsGUISelectComponents'
     end
     object TreeView: TTreeView
       Left = 8
-      Top = 24
+      Top = 107
       Width = 413
-      Height = 390
+      Height = 307
       Anchors = [akLeft, akTop, akRight, akBottom]
       HideSelection = False
       Indent = 19
