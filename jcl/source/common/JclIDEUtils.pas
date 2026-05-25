@@ -4454,6 +4454,9 @@ begin
         for Index := 0 to UserVariables.Count - 1 do
         begin
           EnvOptionName := UserVariables.Names[Index];
+          { Preserve rsvars-provided BDSCOMMONDIR (32-bit: zCommon, 64-bit: zCommon_x64).
+            Base class sets C:\Users\Public\Documents\... which must not override rsvars. }
+          if SameText(EnvOptionName, EnvVariableBDSCOMDIRValueName) then Continue;
           EnvOptionValue := UserVariables.Values[EnvOptionName];
           ExpandEnvironmentVarCustom(EnvOptionValue, Result);
           Result.Values[EnvOptionName] := EnvOptionValue;
