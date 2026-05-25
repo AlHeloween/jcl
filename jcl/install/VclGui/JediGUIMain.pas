@@ -39,7 +39,7 @@ uses
   Windows, Messages, CommCtrl,
   SysUtils, Classes,
   Graphics, Forms, Controls, Dialogs, StdCtrls, ExtCtrls, Menus, Buttons, ComCtrls, ImgList,
-  JclWin32, JclIDEUtils, JclContainerIntf, JediInstall;
+  JclWin32, JclIDEUtils, JclContainerIntf, JediInstall, AdidDebugServer;
 
 const
   WM_AFTERSHOW = WM_USER + 10;
@@ -82,6 +82,7 @@ type
     FIgnoreRunningIDE: Boolean;
     FTaskBarList: ITaskbarList3;
     FInstallPageCount: Integer;
+    FDebugServer: TAdidDebugServer;
     procedure UpdateInstallSelectedOnlyCheckBoxVisibility;
     function GetSelectedInstallPage: IJediInstallPage;
     procedure HandleException(Sender: TObject; E: Exception);
@@ -169,6 +170,7 @@ begin
   inherited Create(AOwner);
   FPages := TJclIntfArrayList.Create(5);
   Application.OnException := HandleException;
+  FDebugServer := TAdidDebugServer.Create(Self);
 end;
 
 destructor TMainForm.Destroy;

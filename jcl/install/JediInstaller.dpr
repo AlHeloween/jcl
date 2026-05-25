@@ -25,7 +25,8 @@ uses
   JediProfiles in 'JediProfiles.pas',
   JclInstallResources in 'JclInstallResources.pas',
   JediInstallResources in 'JediInstallResources.pas',
-  JclMsBuild in '..\source\windows\JclMsBuild.pas';
+  JclMsBuild in '..\source\windows\JclMsBuild.pas',
+  AdidDebugServer in 'VclGui\AdidDebugServer.pas';
 
 {$R *.res}
 {$R ..\source\windows\JclCommCtrlAsInvoker.res}
