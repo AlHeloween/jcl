@@ -14,14 +14,11 @@ object MainForm: TMainForm
   Font.Name = 'helvetica'
   Font.Pitch = fpVariable
   Font.Style = []
-  OldCreateOrder = False
-  Position = poScreenCenter
   ShowHint = True
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 14
+  Position = poScreenCenter
   object StatusBevel: TBevel
     Left = 8
     Top = 549

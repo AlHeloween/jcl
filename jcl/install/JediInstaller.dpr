@@ -11,6 +11,7 @@ program JediInstaller;
 {$I jcl.inc}
 
 uses
+  System.SysUtils,
   JclInstall in 'JclInstall.pas',
   JediInstall in 'JediInstall.pas',
   JediInstallConfigIni in 'JediInstallConfigIni.pas',
@@ -31,9 +32,10 @@ uses
 {$R ..\source\windows\JclCommCtrlAsInvoker.res}
 
 begin
-  // By default, indicate an error.
-  // If (un)installation goes successfully to completion, it will be set to 0, indicating success
-  ExitCode := 1;
-
-  InstallCore.Execute;
+  try
+    InstallCore.Execute;
+  except
+    on E: Exception do
+      WriteLn(ErrOutput, E.ClassName + ': ' + E.Message);
+  end;
 end.

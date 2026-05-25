@@ -3,7 +3,6 @@ object ProfilesFrame: TProfilesFrame
   Top = 0
   Width = 614
   Height = 240
-  AutoScroll = True
   TabOrder = 0
   object MemoComment: TMemo
     Left = 16

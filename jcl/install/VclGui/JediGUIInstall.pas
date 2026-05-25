@@ -169,8 +169,6 @@ constructor TInstallFrame.Create(AOwner: TComponent; AInstallGUI: IJediInstallGU
 begin
   inherited Create(AOwner);
 
-  FNodeData := TList.Create;
-  FDirectories := TList.Create;
   FInstallGUI := AInstallGUI;
 end;
 
@@ -443,10 +441,15 @@ begin
   if not Assigned(FFormCompile) then
   begin
     FFormCompile := TFormCompile.Create(Self, FInstallGUI);
-    SetWindowLongPtr(FFormCompile.Handle, GWL_HWNDPARENT, LONG_PTR(Handle));
-    FFormCompile.Init(Caption, True);
-    FFormCompile.Show;
-    Application.ProcessMessages;
+    if Assigned(FFormCompile) then
+    try
+      SetWindowLongPtr(FFormCompile.Handle, GWL_HWNDPARENT, LONG_PTR(Handle));
+      FFormCompile.Init(Caption, True);
+      FFormCompile.Show;
+      Application.ProcessMessages;
+    except
+      FreeAndNil(FFormCompile);
+    end;
   end;
   Result := FFormCompile;
 end;
@@ -493,6 +496,7 @@ var
   NodeRec: PNodeRec;
   ParentNode, ThisNode: TTreeNode;
 begin
+  if not Assigned(TreeView) then Exit;
   if Id = -1 then
     raise Exception.CreateResFmt(@RsInvalidOption, [Id]);
 
@@ -561,16 +565,19 @@ begin
   // FIDEEditionRadioGroup.Items.Add(LoadResString(@RsGUIIDEEditionBoth));
   FIDEEditionRadioGroup.ItemIndex := 0; { default: 32-bit IDE }
 
-  ANode := TreeView.Items.GetFirstNode;
-  while Assigned(ANode) do
+  if Assigned(TreeView) then
   begin
-    if (ANode.Count > 0) and IsExpandable(ANode) then
-      ANode.Expand(False);
-    ANode := ANode.GetNext;
+    ANode := TreeView.Items.GetFirstNode;
+    while Assigned(ANode) do
+    begin
+      if (ANode.Count > 0) and IsExpandable(ANode) then
+        ANode.Expand(False);
+      ANode := ANode.GetNext;
+    end;
+    ANode := TreeView.Items.GetFirstNode;
+    if Assigned(ANode) then
+      TreeView.TopItem := ANode;
   end;
-  ANode := TreeView.Items.GetFirstNode;
-  if Assigned(ANode) then
-    TreeView.TopItem := ANode;
 end;
 
 function TInstallFrame.GetOptionChecked(Id: Integer): Boolean;
@@ -669,30 +676,39 @@ end;
 
 function TInstallFrame.GetProgress: Integer;
 begin
-  Result := ProgressBar.Position;
+  if Assigned(ProgressBar) then
+    Result := ProgressBar.Position
+  else
+    Result := 0;
 end;
 
 procedure TInstallFrame.SetProgress(Value: Integer);
 begin
-  ProgressBar.Position := Value;
+  if Assigned(ProgressBar) then
+    ProgressBar.Position := Value;
 end;
 
 procedure TInstallFrame.BeginInstall;
 var
   ANode: TTreeNode;
 begin
-  ProgressBar.Visible := True;
+  if Assigned(ProgressBar) then
+    ProgressBar.Visible := True;
 
-  InfoDisplay.Lines.Clear;
+  if Assigned(InfoDisplay) then
+    InfoDisplay.Lines.Clear;
 
   FCheckedCount := 0;
   FInstallCount := 0;
-  ANode := TreeView.Items.GetFirstNode;
-  while Assigned(ANode) do
+  if Assigned(TreeView) then
   begin
-    if GetNodeChecked(ANode) then
-      Inc(FCheckedCount);
-    ANode := ANode.GetNext;
+    ANode := TreeView.Items.GetFirstNode;
+    while Assigned(ANode) do
+    begin
+      if GetNodeChecked(ANode) then
+        Inc(FCheckedCount);
+      ANode := ANode.GetNext;
+    end;
   end;
 
   FInstalling := True;
@@ -781,13 +797,23 @@ begin
   FInstalling := False;
 
   MarkOptionEnd(-1, True);
-  ANode := TreeView.Items.GetFirstNode;
-  while Assigned(ANode) do
+
+  if Assigned(TreeView) then
   begin
-    UpdateImageIndex(ANode);
-    ANode := ANode.GetNext;
+    ANode := TreeView.Items.GetFirstNode;
+    while ANode <> nil do
+    begin
+      case ANode.ImageIndex of
+        IcoNotInstalled:
+          UpdateImageIndex(ANode);
+        IcoFailed:
+          ANode.ImageIndex := IcoNotInstalled;
+      end;
+      ANode := ANode.GetNext;
+    end;
   end;
-  ProgressBar.Visible := False;
+  if Assigned(ProgressBar) then
+    ProgressBar.Visible := False;
 end;
 
 procedure TInstallFrame.CompilationStart(const ProjectName: string);
@@ -797,31 +823,54 @@ end;
 
 procedure TInstallFrame.AddLogLine(const Line: string);
 begin
-  InfoDisplay.Lines.Append(Line);
-  InfoDisplay.Perform(EM_SCROLLCARET, 0, 0);
+  if Assigned(InfoDisplay) then
+  begin
+    InfoDisplay.Lines.Append(Line);
+    InfoDisplay.Perform(EM_SCROLLCARET, 0, 0);
+  end;
 end;
 
 procedure TInstallFrame.AddHint(const Line: string);
 begin
-  GetFormCompile.AddHint(Line);
+  try
+    GetFormCompile.AddHint(Line);
+  except
+    on E: Exception do
+      AddLogLine('AddHint error: ' + E.Message);
+  end;
   AddLogLine(Line);
 end;
 
 procedure TInstallFrame.AddWarning(const Line: string);
 begin
-  GetFormCompile.AddWarning(Line);
+  try
+    GetFormCompile.AddWarning(Line);
+  except
+    on E: Exception do
+      AddLogLine('AddWarning error: ' + E.Message);
+  end;
   AddLogLine(Line);
 end;
 
 procedure TInstallFrame.AddError(const Line: string);
 begin
-  GetFormCompile.AddError(Line);
+  try
+    GetFormCompile.AddError(Line);
+  except
+    on E: Exception do
+      AddLogLine('AddError error: ' + E.Message);
+  end;
   AddLogLine(Line);
 end;
 
 procedure TInstallFrame.AddFatal(const Line: string);
 begin
-  GetFormCompile.AddFatal(Line);
+  try
+    GetFormCompile.AddFatal(Line);
+  except
+    on E: Exception do
+      AddLogLine('AddFatal error: ' + E.Message);
+  end;
   AddLogLine(Line);
 end;
 
@@ -835,7 +884,12 @@ end;
 
 procedure TInstallFrame.CompilationProgress(const FileName: string; LineNumber: Integer);
 begin
-  GetFormCompile.CompilationProgress(FileName, LineNumber);
+  try
+    GetFormCompile.CompilationProgress(FileName, LineNumber);
+  except
+    on E: Exception do
+      AddLogLine('CompilationProgress error: ' + E.Message);
+  end;
 end;
 
 end.

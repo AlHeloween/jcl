@@ -65,18 +65,21 @@ var
   AProfilesManager: IJediProfilesManager;
 begin
   inherited Create(AOwner);
-  MemoComment.Lines.Text := LoadResString(@RsGUIProfiles);
-  MemoComment.WordWrap := True;
-  AProfilesManager := InstallCore.ProfilesManager;
-  for Index := 0 to AProfilesManager.ProfileCount - 1 do
-  begin
-    ACheckBox := TCheckBox.Create(Self);
-    ACheckBox.SetBounds(48, Index * 32 + 100, Width - 96, ACheckBox.Height);
-    ACheckBox.Anchors := [akLeft, akTop, akRight];
-    ACheckBox.Parent := Self;
-    ACheckBox.Checked := True;
-    ACheckBox.Caption := AProfilesManager.ProfileNames[Index];
-  end;
+  if Assigned(MemoComment) then
+    begin
+      MemoComment.Lines.Text := LoadResString(@RsGUIProfiles);
+      MemoComment.WordWrap := True;
+    end;
+    AProfilesManager := InstallCore.ProfilesManager;
+    for Index := 0 to AProfilesManager.ProfileCount - 1 do
+    begin
+      ACheckBox := TCheckBox.Create(Self);
+      ACheckBox.SetBounds(48, Index * 32 + 100, Width - 96, ACheckBox.Height);
+      ACheckBox.Anchors := [akLeft, akTop, akRight];
+      ACheckBox.Parent := Self;
+      ACheckBox.Checked := True;
+      ACheckBox.Caption := AProfilesManager.ProfileNames[Index];
+    end;
 end;
 
 function TProfilesFrame.GetCaption: string;

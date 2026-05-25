@@ -12,12 +12,9 @@ object FormCompile: TFormCompile
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
-  PixelsPerInch = 96
-  TextHeight = 13
   object PanelClient: TPanel
     Left = 8
     Top = 5

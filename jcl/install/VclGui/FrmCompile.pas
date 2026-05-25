@@ -135,10 +135,13 @@ end;
 procedure TFormCompile.Init(const ProjectName: string; Clear: Boolean);
 begin
   Tag := 0;
-  LblProject.Caption := MinimizeName(ProjectName, LblProject.Canvas, LblProject.ClientWidth);
+  if Assigned(LblProject) then
+    LblProject.Caption := MinimizeName(ProjectName, LblProject.Canvas, LblProject.ClientWidth);
 
-  LblStatusCaption.Font.Style := [];
-  LblStatus.Font.Style := [];
+  if Assigned(LblStatusCaption) then
+    LblStatusCaption.Font.Style := [];
+  if Assigned(LblStatus) then
+    LblStatus.Font.Style := [];
 
   if Clear then
   begin
@@ -152,15 +155,23 @@ begin
   FCurrentLine := 0;
   FCurFilename := '';
 
-  LblHints.Caption := IntToStr(FHints);
-  LblWarnings.Caption := IntToStr(FWarnings);
-  LblErrors.Caption := IntToStr(FErrors);
-  LblCurrentLine.Caption := IntToStr(FCurrentLine);
-  LblTotalLines.Caption := IntToStr(FTotalLines);
-  LblStatusCaption.Caption := LoadResString(@RsGUIPreparing);
-  LblStatus.Caption := '';
+  if Assigned(LblHints) then
+    LblHints.Caption := IntToStr(FHints);
+  if Assigned(LblWarnings) then
+    LblWarnings.Caption := IntToStr(FWarnings);
+  if Assigned(LblErrors) then
+    LblErrors.Caption := IntToStr(FErrors);
+  if Assigned(LblCurrentLine) then
+    LblCurrentLine.Caption := IntToStr(FCurrentLine);
+  if Assigned(LblTotalLines) then
+    LblTotalLines.Caption := IntToStr(FTotalLines);
+  if Assigned(LblStatusCaption) then
+    LblStatusCaption.Caption := LoadResString(@RsGUIPreparing);
+  if Assigned(LblStatus) then
+    LblStatus.Caption := '';
 
-  BtnOk.Enabled := False;
+  if Assigned(BtnOk) then
+    BtnOk.Enabled := False;
   Show;
 end;
 
@@ -171,10 +182,14 @@ begin
     FCurFilename := Filename;
     FTotalLines := FTotalLines + FCurrentLine;
     CurrentLine := 0; // updates total lines and current lines
-    LblStatusCaption.Font.Style := [];
-    LblStatus.Font.Style := [];
-    LblStatusCaption.Caption := LoadResString(@RsGUICompiling) + ':';
-    LblStatus.Caption := ExtractFileName(Filename);
+    if Assigned(LblStatusCaption) then
+      LblStatusCaption.Font.Style := [];
+    if Assigned(LblStatus) then
+      LblStatus.Font.Style := [];
+    if Assigned(LblStatusCaption) then
+      LblStatusCaption.Caption := LoadResString(@RsGUICompiling) + ':';
+    if Assigned(LblStatus) then
+      LblStatus.Caption := ExtractFileName(Filename);
     Application.ProcessMessages;
   end;
 end;
@@ -192,10 +207,14 @@ begin
   FTotalLines := FTotalLines + FCurrentLine;
   CurrentLine := 0;
 
-  LblStatusCaption.Font.Style := [];
-  LblStatus.Font.Style := [];
-  LblStatusCaption.Caption := LoadResString(@RsGUILinking) + ':';
-  LblStatus.Caption := ExtractFileName(Filename);
+  if Assigned(LblStatusCaption) then
+    LblStatusCaption.Font.Style := [];
+  if Assigned(LblStatus) then
+    LblStatus.Font.Style := [];
+  if Assigned(LblStatusCaption) then
+    LblStatusCaption.Caption := LoadResString(@RsGUILinking) + ':';
+  if Assigned(LblStatus) then
+    LblStatus.Caption := ExtractFileName(Filename);
   Application.ProcessMessages;
 end;
 
@@ -205,21 +224,31 @@ begin
   FTotalLines := FTotalLines + FCurrentLine;
   CurrentLine := 0;
 
-  LblErrorReason.Caption := ErrorReason;
-  LblErrorReason.Visible := ErrorReason <> '';
-  LblStatusCaption.Font.Style := [fsBold];
-  LblStatus.Font.Style := [fsBold];
-  LblStatusCaption.Caption := LoadResString(@RsGUIDone) + ':';
+  if Assigned(LblErrorReason) then
+  begin
+    LblErrorReason.Caption := ErrorReason;
+    LblErrorReason.Visible := ErrorReason <> '';
+  end;
+  if Assigned(LblStatusCaption) then
+    LblStatusCaption.Font.Style := [fsBold];
+  if Assigned(LblStatus) then
+    LblStatus.Font.Style := [fsBold];
+  if Assigned(LblStatusCaption) then
+    LblStatusCaption.Caption := LoadResString(@RsGUIDone) + ':';
 
-  if FErrors > 0 then
-    LblStatus.Caption := LoadResString(@RsGUIThereAreErrors)
-  else if FWarnings > 0 then
-    LblStatus.Caption := LoadResString(@RsGUIThereAreWarnings)
-  else if FHints > 0 then
-    LblStatus.Caption := LoadResString(@RsGUIThereAreHints)
-  else
-    LblStatus.Caption := LoadResString(@RsGUICompiled);
-  BtnOk.Enabled := ErrorReason <> '';
+  if Assigned(LblStatus) then
+  begin
+    if FErrors > 0 then
+      LblStatus.Caption := LoadResString(@RsGUIThereAreErrors)
+    else if FWarnings > 0 then
+      LblStatus.Caption := LoadResString(@RsGUIThereAreWarnings)
+    else if FHints > 0 then
+      LblStatus.Caption := LoadResString(@RsGUIThereAreHints)
+    else
+      LblStatus.Caption := LoadResString(@RsGUICompiled);
+  end;
+  if Assigned(BtnOk) then
+    BtnOk.Enabled := ErrorReason <> '';
   if (ErrorReason <> '') and not (dtError in FInstallGUI.AutoAcceptDialogs) then
   begin
     Hide;
