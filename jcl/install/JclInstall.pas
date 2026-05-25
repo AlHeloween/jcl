@@ -2681,6 +2681,7 @@ end;
 procedure TJclInstallation.IDEEditionChangedHandler(Sender: TObject);
 var
   Edition: Integer;
+  NewPath: string;
 begin
   if not Assigned(GUIPage) then Exit;
   Edition := GUIPage.GetIDEEdition;
@@ -2692,13 +2693,19 @@ begin
     FTargetIDEEdition := ie32;
   end;
 
+  OutputDebugString(PChar(Format('Adid: IDE edition changed to %d', [Edition])));
+
   { Update target's IDE edition to invalidate env var cache and recompute paths }
   if Target is TJclBDSInstallation then
     (Target as TJclBDSInstallation).IDEEdition := FTargetIDEEdition;
 
   { Push recomputed paths to GUI directory fields }
   if (FGUIBPLPathIndex >= 0) and (FGUIBPLPathIndex < GUIPage.DirectoryCount) then
-    GUIPage.Directories[FGUIBPLPathIndex] := Target.BPLOutputPath[FTargetPlatform];
+  begin
+    NewPath := Target.BPLOutputPath[FTargetPlatform];
+    OutputDebugString(PChar(Format('Adid: BPL path=%s', [NewPath])));
+    GUIPage.Directories[FGUIBPLPathIndex] := NewPath;
+  end;
   if (FGUIDCPPathIndex >= 0) and (FGUIDCPPathIndex < GUIPage.DirectoryCount) then
     GUIPage.Directories[FGUIDCPPathIndex] := FJclDcpPath;
   if (FGUIHPPPathIndex >= 0) and (FGUIHPPPathIndex < GUIPage.DirectoryCount) then

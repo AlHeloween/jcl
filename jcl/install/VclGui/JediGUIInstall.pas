@@ -621,6 +621,8 @@ end;
 
 procedure TInstallFrame.IDEEditionRadioGroupClick(Sender: TObject);
 begin
+  OutputDebugString(PChar(Format('AdidDebug: RadioClick, handler=%s',
+    [BoolToStr(Assigned(FOnIDEEditionChanged), True)])));
   if Assigned(FOnIDEEditionChanged) then
     FOnIDEEditionChanged(Self);
 end;
