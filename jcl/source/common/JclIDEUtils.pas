@@ -641,6 +641,8 @@ type
   end;
 
   {$IFDEF MSWINDOWS}
+  TIDEEdition = (ieDefault, ie32, ie64, ieBoth);
+
   TJclBDSInstallation = class(TJclBorRADToolInstallation)
   private
     FDualPackageInstallation: Boolean;
@@ -660,7 +662,9 @@ type
     FBCC64: TJclBCC64;
     FBCC64X: TJclBCC64X;
     FPdbCreate: Boolean;
+    FIDEEdition: TIDEEdition;
     procedure SetDualPackageInstallation(const Value: Boolean);
+    procedure SetIDEEdition(const Value: TIDEEdition);
     function GetCppPathsKeyName(APlatform: TJclBDSPlatform): string;
     function GetCppBrowsingPath(APlatform: TJclBDSPlatform): TJclBorRADToolPath;
     function GetRawCppBrowsingPath(APlatform: TJclBDSPlatform): TJclBorRADToolPath;
@@ -735,6 +739,7 @@ type
     class function GetCommonProjectsDirectory(const RootDir: string; IDEVersionNumber: Integer): string;
     class procedure GetRADStudioVars(const RootDir: string; IDEVersionNumber: Integer; Variables: TStrings);
     class function GetRADStudioVarsFileName(const RootDir: string; IDEVersionNumber: Integer): TFileName;
+    class function GetRADStudioVars64FileName(const RootDir: string; IDEVersionNumber: Integer): TFileName;
     {class }function RadToolName: string; overload; override;
     class function RadToolName(IDEVersionNumber: Integer): string; reintroduce; overload;
 
@@ -782,6 +787,7 @@ type
     property DCCIL: TJclDCCIL read GetDCCIL;
     property MaxDelphiCLRVersion: string read GetMaxDelphiCLRVersion;
     property PdbCreate: Boolean read FPdbCreate write FPdbCreate;
+    property IDEEdition: TIDEEdition read FIDEEdition write SetIDEEdition;
   end;
   {$ENDIF MSWINDOWS}
 
@@ -3704,6 +3710,7 @@ const
 begin
   inherited Create(AConfigDataLocation, ARootKey);
   FHelp2Manager := TJclHelp2Manager.Create(IDEVersionNumber);
+  FIDEEdition := ieDefault;
 
   if ConfigData.ReadString(PersonalitiesSection, 'C#Builder', '') <> '' then
     Include(FPersonalities, bpCSBuilder32);
@@ -4417,6 +4424,8 @@ var
   UserVariables: TStrings;
   Index: Integer;
   EnvOptionName, EnvOptionValue: string;
+  Lines: TStrings;
+  I: Integer;
 begin
   if not Assigned(FEnvironmentVariables) then
   begin
@@ -4427,7 +4436,21 @@ begin
       try
         UserVariables.Assign(Result);
         Result.Clear;
-        GetRADStudioVars(RootDir, IDEVersionNumber, Result);
+        { Use rsvars64.bat for 64-bit IDE, rsvars.bat for 32-bit IDE / default }
+        if (FIDEEdition = ie64) and FileExists(GetRADStudioVars64FileName(RootDir, IDEVersionNumber)) then
+        begin
+          GetEnvironmentVars(Result);
+          Lines := TStringList.Create;
+          try
+            Lines.LoadFromFile(GetRADStudioVars64FileName(RootDir, IDEVersionNumber));
+            for I := 0 to Lines.Count - 1 do
+              InterpretSetVariable(Lines[I], Result);
+          finally
+            Lines.Free;
+          end;
+        end
+        else
+          GetRADStudioVars(RootDir, IDEVersionNumber, Result);
         for Index := 0 to UserVariables.Count - 1 do
         begin
           EnvOptionName := UserVariables.Names[Index];
@@ -4619,6 +4642,14 @@ class function TJclBDSInstallation.GetRADStudioVarsFileName(const RootDir: strin
 begin
   if IDEVersionNumber >= 5 then
     Result := Format('%s%sbin%srsvars.bat', [RootDir, DirDelimiter, DirDelimiter])
+  else
+    raise EJclBorRADException.CreateResFmt(@RsERsVars, [RadToolName(IDEVersionNumber), IDEVersionNumber, LoadResString(@RsMsBuildNotSupported)]);
+end;
+
+class function TJclBDSInstallation.GetRADStudioVars64FileName(const RootDir: string; IDEVersionNumber: Integer): TFileName;
+begin
+  if IDEVersionNumber >= 5 then
+    Result := Format('%s%sbin64%srsvars64.bat', [RootDir, DirDelimiter, DirDelimiter])
   else
     raise EJclBorRADException.CreateResFmt(@RsERsVars, [RadToolName(IDEVersionNumber), IDEVersionNumber, LoadResString(@RsMsBuildNotSupported)]);
 end;
@@ -5044,6 +5075,15 @@ begin
   if Value and not (bpBCBuilder32 in Personalities) then
     raise EJclBorRadException.CreateResFmt(@RsEDualPackageNotSupported, [Name]);
   FDualPackageInstallation := Value;
+end;
+
+procedure TJclBDSInstallation.SetIDEEdition(const Value: TIDEEdition);
+begin
+  if FIDEEdition <> Value then
+  begin
+    FIDEEdition := Value;
+    FreeAndNil(FEnvironmentVariables); { Invalidate env vars cache to force re-read from correct rsvars file }
+  end;
 end;
 
 procedure TJclBDSInstallation.SetMsBuildEnvOption(const OptionName, Value: string; APlatform: TJclBDSPlatform);

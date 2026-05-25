@@ -146,8 +146,6 @@ const
       '7ZIP_LINKDLL', '7ZIP_LINKONREQUEST' );
 
 type
-  TIDEEdition = (ieDefault, ie32, ie64, ieBoth);
-
   TJclDistribution = class;
 
   TJclInstallation = class
@@ -1812,6 +1810,10 @@ var
     if OptionChecked[joJCLPackages] then
     begin
       MarkOptionBegin(joJCLPackages);
+
+      { Set IDE edition on the target before compiler/path resolution }
+      if Target is TJclBDSInstallation then
+        (Target as TJclBDSInstallation).IDEEdition := FTargetIDEEdition;
 
       if (Target is TJclBDSInstallation) and (Target.IDEVersionNumber >= 9) and (FTargetPlatform = bpWin64) then
         if (FTargetIDEEdition <> ie32) and (clDcc64x in Target.CommandLineTools) then
