@@ -1279,7 +1279,7 @@ begin
 
   FGUIPage := GUI.CreateInstallPage;
   GUIPage.Caption := TargetName;
-  GUIPage.SetIcon(Target.IdeExeFileName);
+  GUIPage.SetIcon(Target.IdeExeFileName[False]);
 
   AddOption(joJediCodeLibrary, [goExpandable, goChecked], JediTargetOption);
 
