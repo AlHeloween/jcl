@@ -540,6 +540,11 @@ begin
     FIDEEditionRadioGroup.SetBounds(8, 34, 397, 40);
     FIDEEditionRadioGroup.Anchors := [akLeft, akTop, akRight];
     FIDEEditionRadioGroup.Columns := 2;
+
+    { Shift existing components down to make room for IDE edition group box }
+    LabelSelectComponents.Top := 88;
+    TreeView.Top := 107;
+    TreeView.Height := ComponentsTreePanel.ClientHeight - TreeView.Top - 8;
   end;
 
   LabelSelectComponents.Caption := LoadResString(@RsGUISelectComponents);
