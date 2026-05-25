@@ -37,7 +37,6 @@ object InstallFrame: TInstallFrame
       Width = 347
       Height = 298
       Anchors = [akLeft, akTop, akRight, akBottom]
-      Color = clInfoBk
       Font.Charset = ANSI_CHARSET
       Font.Color = clInfoText
       Font.Height = -11

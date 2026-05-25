@@ -1,22 +1,18 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{3A9A06EC-AE74-425F-B057-7BF3B87D937A}</ProjectGuid>
         <MainSource>JediInstaller.dpr</MainSource>
         <ProjectVersion>37.0</ProjectVersion>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
         <AppType>Application</AppType>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
+        <ProjectName Condition="'$(ProjectName)'==''">JediInstaller</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
-        <Base_Win32>true</Base_Win32>
-        <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
@@ -53,10 +49,18 @@
         <DCC_UnitSearchPath>$(BDS)\lib\Win32\release;..\source\include;..\source\common;..\source\windows;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <DCC_DebugInformation>2</DCC_DebugInformation>
+        <VerInfo_MajorVer>2</VerInfo_MajorVer>
+        <VerInfo_MinorVer>1</VerInfo_MinorVer>
+        <Manifest_File>(None)</Manifest_File>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <DCC_DcuOutput>..\lib\d37\win32</DCC_DcuOutput>
         <DCC_ObjOutput>..\lib\d37\win32</DCC_ObjOutput>
-        <DCC_UnitSearchPath>$(BDS)\lib\Win32\release;..\lib\d37\win32;..\source\include;..\source\common;..\source\windows;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\lib\d37\win32;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -90,15 +94,15 @@
         <DCCReference Include="JclInstallResources.pas"/>
         <DCCReference Include="JediInstallResources.pas"/>
         <DCCReference Include="..\source\windows\JclMsBuild.pas"/>
-        <BuildConfiguration Include="Release">
-            <Key>Cfg_2</Key>
-            <CfgParent>Base</CfgParent>
-        </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
@@ -110,6 +114,15 @@
                 <Source>
                     <Source Name="MainSource">JediInstaller.dpr</Source>
                 </Source>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k370.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp370.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="D:\zPascal\zCommon\Bpl\kbmMWDesD101Ent.bpl">kbmMW Enterprise Edition - High performance n-tier - Delphi 10.1 Berlin for Win32 - Designtime - www.Components4Developers.com</Excluded_Packages>
+                    <Excluded_Packages Name="D:\zPascal\zCommon\Bpl\OnGuardDD370.bpl">File D:\zPascal\zCommon\Bpl\OnGuardDD370.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="D:\zPascal\zCommon\Bpl\dcl_vcwdXE_up.bpl">File D:\zPascal\zCommon\Bpl\dcl_vcwdXE_up.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="D:\zPascal\zCommon\Bpl\DclEhLib230.bpl">File D:\zPascal\zCommon\Bpl\DclEhLib230.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="D:\zPascal\zCommon\Bpl\UIBD15Win32D.bpl">UIB Components for Delphi/RAD Studio 2011</Excluded_Packages>
+                </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>

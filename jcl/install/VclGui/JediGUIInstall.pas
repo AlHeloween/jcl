@@ -167,9 +167,10 @@ type
 
 constructor TInstallFrame.Create(AOwner: TComponent; AInstallGUI: IJediInstallGUI);
 begin
-  inherited Create(AOwner);
-
+  FNodeData := TList.Create;
+  FDirectories := TList.Create;
   FInstallGUI := AInstallGUI;
+  inherited Create(AOwner);
 end;
 
 destructor TInstallFrame.Destroy;
@@ -528,6 +529,9 @@ begin
   { Create IDE edition selection controls dynamically (safe: frame is fully parented) }
   if not Assigned(FIDEEditionGroupBox) then
   begin
+    { Ensure frame has a parent window before creating child TWinControls }
+    Self.HandleNeeded;
+
     FIDEEditionGroupBox := TGroupBox.Create(Self);
     FIDEEditionGroupBox.Parent := ComponentsTreePanel;
     FIDEEditionGroupBox.SetBounds(8, 2, 413, 80);

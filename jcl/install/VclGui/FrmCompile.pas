@@ -197,9 +197,8 @@ end;
 constructor TFormCompile.Create(AOwner: TComponent;
   AInstallGUI: IJediInstallGUI);
 begin
-  inherited Create(AOwner);
-
   FInstallGUI := AInstallGUI;
+  inherited Create(AOwner);
 end;
 
 procedure TFormCompile.Linking(const Filename: string);
