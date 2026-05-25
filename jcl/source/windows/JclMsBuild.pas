@@ -748,6 +748,18 @@ begin
     if SystemValue <> '' then
       FEnvironmentProperties.Values[PropName] := SystemValue;
   end;
+  { Inject missing properties from SystemEnvironmentProperties that are not yet
+    in FEnvironmentProperties. Critical: variables like BDSCOMMONDIR are set by
+    rsvars.bat/rsvars64.bat and are NOT Windows environment variables. Without
+    this, Parse() ignores the rsvars value and environment.proj overwrites with
+    a stale 32-bit default. }
+  for I := 0 to SystemEnvironmentProperties.Count - 1 do
+  begin
+    PropName := SystemEnvironmentProperties.Names[I];
+    SystemValue := SystemEnvironmentProperties.Values[PropName];
+    if (SystemValue <> '') and (FEnvironmentProperties.IndexOfName(PropName) < 0) then
+      FEnvironmentProperties.Values[PropName] := SystemValue;
+  end;
 end;
 
 procedure TJclMsBuildProperties.Put(Index: Integer; const S: string);
