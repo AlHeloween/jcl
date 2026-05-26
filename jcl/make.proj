@@ -75,7 +75,12 @@
 
 	<PropertyGroup>
 		<DCC Condition=" '$(Platform)' == 'win32' ">&quot;$(BDS)\bin\dcc32.exe&quot; --no-config -Q</DCC>
-		<DCC Condition=" '$(Platform)' == 'win64' ">&quot;$(BDS)\bin\dcc64.exe&quot; --no-config -Q</DCC>
+		<!-- Auto-detect 64-bit IDE edition from BDSCOMMONDIR (zCommon_x64) or explicit /p:IDEEdition=64 -->
+		<IDEEdition Condition=" '$(IDEEdition)' == '' and $(BDSCOMMONDIR.ToUpper().Contains('_X64')) ">64</IDEEdition>
+		<IDEEdition Condition=" '$(IDEEdition)' == '' ">32</IDEEdition>
+		<!-- Native 64-bit compiler (bin64\dcc64.exe) when available and 64-bit IDE requested -->
+		<DCC Condition=" '$(Platform)' == 'win64' and Exists('$(BDS)\bin64\dcc64.exe') and '$(IDEEdition)' == '64' ">&quot;$(BDS)\bin64\dcc64.exe&quot; --no-config -Q</DCC>
+		<DCC Condition=" '$(Platform)' == 'win64' and ( !Exists('$(BDS)\bin64\dcc64.exe') or '$(IDEEdition)' != '64' ) ">&quot;$(BDS)\bin\dcc64.exe&quot; --no-config -Q</DCC>
 
 		<BCBCompile>false</BCBCompile>
 		<BCBCompile Condition=" Exists('$(BDS)\bin\bccide.dll') or '$(ForceBCBCompile)' == 'true' ">true</BCBCompile>
