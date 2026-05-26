@@ -1821,11 +1821,22 @@ var
       if Target is TJclBDSInstallation then
         (Target as TJclBDSInstallation).IDEEdition := FTargetIDEEdition;
 
+      OutputDebugString(PChar(Format('CompilePackages: FTargetIDEEdition=%d, clDcc64x=%s, bpWin64=%s',
+        [Ord(FTargetIDEEdition),
+         BoolToStr(clDcc64x in Target.CommandLineTools, True),
+         BoolToStr(FTargetPlatform = bpWin64, True)])));
+
       if (Target is TJclBDSInstallation) and (Target.IDEVersionNumber >= 9) and (FTargetPlatform = bpWin64) then
         if (FTargetIDEEdition <> ie32) and (clDcc64x in Target.CommandLineTools) then
+        begin
+          WriteLog('Compiler: bin64\dcc64.exe (native 64-bit IDE)');
           Target.DCC := (Target as TJclBDSInstallation).DCC64Native
+        end
         else
+        begin
+          WriteLog('Compiler: bin\dcc64.exe (cross-compiler / 32-bit IDE)');
           Target.DCC := (Target as TJclBDSInstallation).DCC64
+        end
       else
         Target.DCC := Target.DCC32;
 
