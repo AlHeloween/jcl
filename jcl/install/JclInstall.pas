@@ -2699,8 +2699,6 @@ begin
     FTargetIDEEdition := ie32;
   end;
 
-  OutputDebugString(PChar(Format('Adid: IDE edition changed to %d', [Edition])));
-
   { Log visible change to installer window for user verification }
   try
     GUIPage.AddText(Format('--- IDE edition changed to: %s ---', [Iff(Edition=1, '64-bit IDE', '32-bit IDE')]));
@@ -2714,7 +2712,6 @@ begin
   if (FGUIBPLPathIndex >= 0) and (FGUIBPLPathIndex < GUIPage.DirectoryCount) then
   begin
     NewPath := Target.BPLOutputPath[FTargetPlatform];
-    OutputDebugString(PChar(Format('Adid: BPL path=%s', [NewPath])));
     try
       GUIPage.AddText(Format('BPL output: %s', [NewPath]));
     except end;
