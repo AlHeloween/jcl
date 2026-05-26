@@ -1821,13 +1821,8 @@ var
       if Target is TJclBDSInstallation then
         (Target as TJclBDSInstallation).IDEEdition := FTargetIDEEdition;
 
-      OutputDebugString(PChar(Format('CompilePackages: FTargetIDEEdition=%d, clDcc64x=%s, bpWin64=%s',
-        [Ord(FTargetIDEEdition),
-         BoolToStr(clDcc64x in Target.CommandLineTools, True),
-         BoolToStr(FTargetPlatform = bpWin64, True)])));
-
       if (Target is TJclBDSInstallation) and (Target.IDEVersionNumber >= 9) and (FTargetPlatform = bpWin64) then
-        if (FTargetIDEEdition <> ie32) and (clDcc64x in Target.CommandLineTools) then
+        if FTargetIDEEdition = ie64 then
         begin
           WriteLog('Compiler: bin64\dcc64.exe (native 64-bit IDE)');
           Target.DCC := (Target as TJclBDSInstallation).DCC64Native
@@ -3076,7 +3071,10 @@ begin
   try
     SetCurrentDir(NewDirectory);
     if (Target is TJclBDSInstallation) and (Target.IDEVersionNumber >= 9) and (FTargetPlatform = bpWin64) then
-      Compiler := (Target as TJclBDSInstallation).DCC64
+      if FTargetIDEEdition = ie64 then
+        Compiler := (Target as TJclBDSInstallation).DCC64Native
+      else
+        Compiler := (Target as TJclBDSInstallation).DCC64
     else
       Compiler := Target.DCC32;
     Compiler.Options.Clear;
